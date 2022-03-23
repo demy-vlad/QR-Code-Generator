@@ -1,7 +1,8 @@
 import qrcode
+import telebot
+import time
 from loguru import logger
 from telebot import types
-import telebot
 
 bot = telebot.TeleBot("")
 # bot.remove_webhook()
@@ -86,4 +87,11 @@ def qacode(message):
         bot.send_photo(message.chat.id, file)
         start(message)
 
-bot.polling(none_stop=True)
+while True:
+        try:
+                bot.polling(none_stop=True)
+
+        except Exception as e:
+                logger.error(e)  # или просто print(e) если у вас логгера нет, 1
+                # или import traceback; traceback.print_exc() для печати полной инфы
+                time.sleep(15)
