@@ -1,16 +1,18 @@
+from loguru import logger
+from telebot import types
+from collections import OrderedDict
 import qrcode
 import telebot
 import time
-from loguru import logger
-from telebot import types
+
 
 bot = telebot.TeleBot("")
-user_statistics=[]
+user_statistic=[]
 
 @bot.message_handler(commands=['start'])
 def start_bot(message):
         logger.debug(f"{message.chat.id, message.chat.username, message.chat.last_name, message.chat.first_name} - click: start")
-        user_statistics.append(str(message.chat.id))
+        user_statistic.append(str(message.chat.id))
         keyboard = types.InlineKeyboardMarkup()
         urls = types.InlineKeyboardButton("Generate URL QR-code", callback_data='url')
         keyboard.add(urls)
@@ -19,6 +21,7 @@ def start_bot(message):
 @bot.message_handler(content_types=['text'])
 def founded_menu_faq(message):
         if message.text == "info":
+                user_statistics = list(OrderedDict.fromkeys(user_statistic))
                 bot.send_message(message.chat.id, text=(f"Кол. пользователей зашло в бот: {len(user_statistics)}"))
                 bot.send_message(message.chat.id, text=(f"{user_statistics}"))
                 start_bot(message)
