@@ -5,21 +5,31 @@ from loguru import logger
 from telebot import types
 
 bot = telebot.TeleBot("")
-# bot.remove_webhook()
+user_statistics=[]
 
 @bot.message_handler(commands=['start'])
-def start(message):
+def start_bot(message):
         logger.debug(f"{message.chat.id, message.chat.username, message.chat.last_name, message.chat.first_name} - click: start")
-        
+        user_statistics.append(str(message.chat.id))
         keyboard = types.InlineKeyboardMarkup()
         urls = types.InlineKeyboardButton("Generate URL QR-code", callback_data='url')
         keyboard.add(urls)
         bot.send_message(message.chat.id, "♦️ Create your own QR code in seconds ♣️", reply_markup=keyboard)
 
+@bot.message_handler(content_types=['text'])
+def founded_menu_faq(message):
+        if message.text == "info":
+                bot.send_message(message.chat.id, text=(f"Кол. пользователей зашло в бот: {len(user_statistics)}"))
+                bot.send_message(message.chat.id, text=(f"{user_statistics}"))
+                start_bot(message)
+        else:
+                bot.send_message(message.chat.id, text="Выбери действие")
+                logger.error(f"{message.chat.id} - click: {message.text}")
+                start_bot(message)
+
 @bot.callback_query_handler(func=lambda call:True)
 def founded_menu_faq(call):
         if call.data == "url":
-                print(2)
                 global qr_size
                 global qr_version
                 keyboard = types.InlineKeyboardMarkup()
@@ -70,8 +80,6 @@ def founded_menu_faq(call):
                 msg = bot.send_message(call.message.chat.id, text=f"Enter URL:", parse_mode= "Markdown")
                 bot.register_next_step_handler(msg, qacode)
 
-
-
 def qacode(message):
         input_url = message.text
         qr = qrcode.QRCode(
@@ -81,16 +89,15 @@ def qacode(message):
         qr.add_data(input_url)
         qr.make(fit=True)
         img = qr.make_image(fill='black', back_color='white')
-        img.save(f'img/{message.chat.id}.png')
+        img.save(f'img\{message.chat.id}.png')
 
-        file = open(f'img/{message.chat.id}.png', 'rb')
+        file = open(f'img\{message.chat.id}.png', 'rb')
         bot.send_photo(message.chat.id, file)
-        start(message)
+        start_bot(message)
 
 while True:
         try:
                 bot.polling(none_stop=True)
-
         except Exception as e:
                 logger.error(e)  # или просто print(e) если у вас логгера нет, 1
                 # или import traceback; traceback.print_exc() для печати полной инфы
